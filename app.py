@@ -44,7 +44,6 @@ if 'df' in locals():
     st.header("2. Análisis de Clústeres Actuariales")
     st.write("Distribuciones y relaciones clave segmentadas por el modelo K-means entrenado.")
     
-    # Determinar qué columna representa al cluster (por ejemplo 'cluster' o 'cluster_riesgo')
     cluster_col = 'cluster' if 'cluster' in df.columns else [c for c in df.columns if 'cluster' in c.lower()][0] if any('cluster' in c.lower() for c in df.columns) else None
     
     if cluster_col:
@@ -73,46 +72,67 @@ if 'df' in locals():
 
 st.markdown("---")
 
-# 3. Módulo de Inferencia (Predicción)
+# 3. Módulo de Inferencia (Predicción adaptado a image_6fb152.png)
 st.header("3. Simulación de Predicción de Riesgo")
-st.write("Ingresa los datos del cliente para evaluar su segmento mediante los archivos `.pkl` cargados.")
+st.write("Ingresa los datos del cliente para evaluar su segmento según el formato del modelo entrenado.")
 
 # Formulario de entrada de usuario
 with st.form("prediction_form"):
-    c1, c2, c3 = st.columns(3)
-    age = c1.number_input("Edad", min_value=18, max_value=100, value=30)
-    sex = c2.selectbox("Sexo", options=["female", "male"])
-    bmi = c3.number_input("Índice de Masa Corporal (BMI)", min_value=10.0, max_value=60.0, value=25.0)
+    c1, c2, c3, c4 = st.columns(4)
+    age = c1.number_input("Edad (age)", min_value=18, max_value=100, value=45)
+    sex = c2.selectbox("Sexo (sex)", options=["male", "female"])
+    bmi = c3.number_input("Índice de Masa Corporal (bmi)", min_value=10.0, max_value=60.0, value=31.2)
+    children = c4.number_input("Hijos (children)", min_value=0, max_value=5, value=2)
     
-    c4, c5, c6 = st.columns(3)
-    children = c4.number_input("Hijos", min_value=0, max_value=5, value=0)
-    smoker = c5.selectbox("¿Fuma?", options=["yes", "no"])
-    region = c6.selectbox("Región", options=["southwest", "southeast", "northwest", "northeast"])
+    c5, c6, c7 = st.columns(3)
+    smoker = c5.selectbox("¿Fuma? (smoker)", options=["yes", "no"])
+    region = c6.selectbox("Región (region)", options=["southeast", "southwest", "northwest", "northeast"])
+    charges = c7.number_input("Cargos Médicos Anuales (charges)", min_value=0, max_value=100000, value=28000)
     
     submit = st.form_submit_button("Calcular Riesgo Actuarial")
 
 if submit:
-    # Generar el dataframe con la estructura de entrada
-    input_data = pd.DataFrame([{
-        'age': age, 'sex': sex, 'bmi': bmi, 
-        'children': children, 'smoker': smoker, 'region': region
+    # Generar el DataFrame con las 7 columnas exactas requeridas por el modelo
+    cliente = pd.DataFrame([{
+        "age": age,
+        "sex": sex,
+        "bmi": bmi,
+        "children": children,
+        "smoker": smoker,
+        "region": region,
+        "charges": charges
     }])
     
-    st.write("Datos ingresados para evaluación:")
-    st.dataframe(input_data)
+    st.write("Estructura del DataFrame enviado al modelo:")
+    st.dataframe(cliente)
     
-    # Nombres exactos de tus archivos según la captura de pantalla
     kmeans_path = 'kmeans_riesgo_actuarial.pkl'
     svm_path = 'svm_riesgo_actuarial.pkl'
     
-    if os.path.exists(kmeans_path) and os.path.exists(svm_path):
+    if os.path.exists(kmeans_path):
         try:
-            kmeans_model = joblib.load(kmeans_path)
-            svm_model = joblib.load(svm_path)
+            # Carga del modelo tal como muestra el código base
+            modelo = joblib.load(kmeans_path)
             
-            st.success("¡Modelos `.pkl` cargados con éxito de manera local!")
+            # Ejecución idéntica a la guía de la imagen
+            cluster = modelo.predict(cliente)[0]
             
+            # Mostrar resultado estilizado
+            st.success("🎉 ¡Predicción completada exitosamente!")
+            
+            metric_c1, metric_c2 = st.columns(2)
+            metric_c1.metric(label="Clúster Predicho (K-means)", value=f"Cluster {cluster}")
+            
+            # Intentar clasificar con SVM opcionalmente si el archivo existe
+            if os.path.exists(svm_path):
+                modelo_svm = joblib.load(svm_path)
+                # Nota: Si el SVM también procesa el mismo DF:
+                # prediccion_svm = modelo_svm.predict(cliente)[0]
+                # metric_c2.metric(label="Clasificación de Riesgo (SVM)", value=f"{prediccion_svm}")
+                pass
+                
         except Exception as e:
-            st.error(f"Error al ejecutar la inferencia con los archivos .pkl: {e}")
+            st.error(f"Error al ejecutar la predicción con el modelo: {e}")
+            st.info("💡 Consejo: Si salta un error de tipos, asegúrate de que el modelo guardado contenga un Pipeline con encoders para las columnas categóricas ('sex', 'smoker', 'region').")
     else:
-        st.error("Asegúrate de que 'kmeans_riesgo_actuarial.pkl' y 'svm_riesgo_actuarial.pkl' estén en el mismo directorio que app.py.")
+        st.error(f"No se encontró el archivo '{kmeans_path}' en el directorio. Por favor ponlo junto al app.py.")
