@@ -14,11 +14,11 @@ st.title("📊 Riesgo Actuarial con K-means y SVM")
 st.markdown("### Asignatura: IS-701-Inteligencia Artificial - Campus Comayagua")
 st.write("Propósito didáctico: practicar segmentación no supervisada con K-means y clasificación con Máquinas de Vectores de Soporte.")
 
----
+st.markdown("---")
 
 # 1. Carga de Datos
 st.header("1. Carga del Dataset")
-uploaded_file = st.file_name = "insurance.csv" # Por defecto busca el archivo local
+uploaded_file = "insurance.csv" # Por defecto busca el archivo local
 
 if os.path.exists(uploaded_file):
     df = pd.read_csv(uploaded_file)
@@ -57,7 +57,7 @@ if 'df' in locals():
     with st.expander("Ver estadísticas descriptivas"):
         st.dataframe(df_model.describe())
 
-    ---
+    st.markdown("---")
 
     # 3. Análisis Exploratorio (Seaborn)
     st.header("3. Análisis Exploratorio de Datos")
@@ -84,7 +84,7 @@ if 'df' in locals():
     plt.tight_layout()
     st.pyplot(fig)
 
-    ---
+    st.markdown("---")
 
     # 4. Predicción / Modelos (Estructura de ejecución)
     st.header("4. Simulación de Predicción de Riesgo")
@@ -123,12 +123,7 @@ if 'df' in locals():
             try:
                 kmeans_model = joblib.load(kmeans_path)
                 svm_model = joblib.load(svm_path)
-                
-                # Ejemplo de flujo de predicción (requiere que los .pk1 incluyan el pipeline de preprocesamiento)
-                # cluster = kmeans_model.predict(input_data)
-                # riesgo = svm_model.predict(input_data)
-                
-                st.success("¡Modelos cargados correctamente! (Aplica aquí tus funciones de inferencia)")
+                st.success("¡Modelos cargados correctamente!")
             except Exception as e:
                 st.error(f"Error al procesar los modelos: {e}")
         else:
