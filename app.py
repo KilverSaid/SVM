@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as St
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,119 +12,112 @@ sns.set_theme(style='whitegrid', context='notebook')
 
 st.title("📊 Riesgo Actuarial con K-means y SVM")
 st.markdown("### Asignatura: IS-701-Inteligencia Artificial - Campus Comayagua")
-st.write("Propósito didáctico: practicar segmentación no supervisada con K-means y clasificación con Máquinas de Vectores de Soporte.")
+st.write("Visualización y predicción interactiva utilizando los modelos y datos preprocesados.")
 
-st.markdown("---")
+St.markdown("---")
 
-# 1. Carga de Datos
-st.header("1. Carga del Dataset")
-uploaded_file = "insurance.csv" # Por defecto busca el archivo local
+# 1. Carga de Datos Preprocesados
+st.header("1. Datos de Seguros con Segmentación (Clusters)")
+data_file = "insurance_con_clusters.csv"
+kernels_file = "svm_resultados_kernels.csv"
 
-if os.path.exists(uploaded_file):
-    df = pd.read_csv(uploaded_file)
-    st.success("Dataset 'insurance.csv' cargado con éxito.")
+if os.path.exists(data_file):
+    Df = pd.read_csv(data_file)
+    St.success(f"Archivo '{data_file}' cargado con éxito.")
     
-    with st.expander("Ver datos originales (Primeros 5 registros)"):
-        st.dataframe(df.head())
-        st.write(f"Dimensiones originales: {df.shape}")
+    with st.expander("Ver registros del dataset segmentado"):
+        St.dataframe(df.head())
+        St.write(f"Dimensiones: {df.shape[0]} filas, {df.shape[1]} columnas.")
 else:
-    st.warning("No se encontró el archivo 'insurance.csv' en el directorio actual. Por favor, súbelo aquí:")
-    uploaded_file = st.file_uploader("Elige un archivo CSV", type="csv")
-    if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
-        st.dataframe(df.head())
+    St.error(f"No se encontró el archivo '{data_file}' en el directorio actual. Verifica tu espacio de trabajo.")
 
-# Si el dataset está disponible, procedemos
+# Mostrar tabla de rendimiento de Kernels si existe
+if os.path.exists(kernels_file):
+    With st.expander("Ver Comparativa de Rendimiento de Kernels SVM"):
+        Df_kernels = pd.read_csv(kernels_file)
+        St.dataframe(df_kernels)
+
+St.markdown("---")
+
+# 2. Análisis Exploratorio Basado en los Clusters Actuariales
 if 'df' in locals():
+    St.header("2. Análisis de Clústeres Actuariales")
+    St.write("Distribuciones y relaciones clave segmentadas por el modelo K-means entrenado.")
     
-    # 2. Limpieza Básica
-    st.header("2. Limpieza Básica de Datos")
-    df_model = df.copy()
+    # Determinar qué columna representa al cluster (por ejemplo 'cluster' o 'cluster_riesgo')
+    Cluster_col = 'cluster' if 'cluster' in df.columns else [c for c in df.columns if 'cluster' in c.lower()][0] if any('cluster' in c.lower() for c in df.columns) else None
     
-    # Normalizar textos
-    for col in ['sex', 'smoker', 'region']:
-        if col in df_model.columns:
-            df_model[col] = df_model[col].astype(str).str.strip().str.lower()
+    If cluster_col:
+        Fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+        # Gráfico 1: Distribución de cargos por Cluster
+        Sns.histplot(data=df, x='charges', hue=cluster_col, kde=True, bins=35, palette='tab10', multiple='stack', ax=axes[0,0])
+        Axes[0,0].set_title("Distribución de Cargos por Cluster")
+
+        # Gráfico 2: Dispersión Edad vs Cargos por Cluster
+        Sns.scatterplot(data=df, x='age', y='charges', hue=cluster_col, palette='tab10', alpha=.7, ax=axes[0,1])
+        Axes[0,1].set_title("Edad vs Cargos (Segmentado por Cluster)")
+
+        # Gráfico 3: Boxplot de Cargos según Condición de Fumador y Cluster
+        Sns.boxplot(data=df, x='smoker', y='charges', hue=cluster_col, palette='tab10', ax=axes[1,0])
+        Axes[1,0].set_title("Impacto del Tabaquismo por Cluster")
+
+        # Gráfico 4: Distribución de Masa Corporal (BMI) vs Cargos por Cluster
+        Sns.scatterplot(data=df, x='bmi', y='charges', hue=cluster_col, palette='tab10', alpha=.7, ax=axes[1,1])
+        Axes[1,1].set_title("BMI vs Cargos (Segmentado por Cluster)")
+
+        Plt.tight_layout()
+        St.pyplot(fig)
+    Else:
+        St.warning("No se detectó explícitamente una columna de clúster en el CSV. Asegúrate de mapear la columna correspondiente.")
+
+St.markdown("---")
+
+# 3. Módulo de Inferencia (Predicción)
+st.header("3. Simulación de Predicción de Riesgo")
+st.write("Ingresa los datos del cliente para evaluar su segmento mediante los archivos `.pkl` cargados.")
+
+# Formulario de entrada de usuario
+with st.form("prediction_form"):
+    C1, c2, c3 = st.columns(3)
+    Age = c1.number_input("Edad", min_value=18, max_value=100, value=30)
+    Sex = c2.selectbox("Sexo", options=["female", "male"])
+    Bmi = c3.number_input("Índice de Masa Corporal (BMI)", min_value=10.0, max_value=60.0, value=25.0)
+    
+    C4, c5, c6 = st.columns(3)
+    Children = c4.number_input("Hijos", min_value=0, max_value=5, value=0)
+    Smoker = c5.selectbox("¿Fuma?", options=["yes", "no"])
+    Region = c6.selectbox("Región", options=["southwest", "southeast", "northwest", "northeast"])
+    
+    Submit = st.form_submit_button("Calcular Riesgo Actuarial")
+
+If submit:
+    # Generar el dataframe con la estructura de entrada
+    Input_data = pd.DataFrame([{
+        'age': age, 'sex': sex, 'bmi': bmi, 
+        'children': children, 'smoker': smoker, 'region': region
+    }])
+    
+    St.write("Datos ingresados para evaluación:")
+    St.dataframe(input_data)
+    
+    # Nombres exactos de tus archivos según la captura de pantalla
+    Kmeans_path = 'kmeans_riesgo_actuarial.pkl'
+    Svm_path = 'svm_riesgo_actuarial.pkl'
+    
+    If os.path.exists(kmeans_path) and os.path.exists(svm_path):
+        Try:
+            Kmeans_model = joblib.load(kmeans_path)
+            Svm_model = joblib.load(svm_path)
             
-    # Eliminar duplicados
-    duplicados = df_model.duplicated().sum()
-    df_model = df_model.drop_duplicates()
-    
-    col1, col2 = st.columns(2)
-    col1.metric("Duplicados eliminados", duplicados)
-    col2.metric("Dimensiones finales", f"{df_model.shape[0]} filas, {df_model.shape[1]} col.")
-    
-    with st.expander("Ver estadísticas descriptivas"):
-        st.dataframe(df_model.describe())
-
-    st.markdown("---")
-
-    # 3. Análisis Exploratorio (Seaborn)
-    st.header("3. Análisis Exploratorio de Datos")
-    st.write("Visualización de las distribuciones y relaciones clave con respecto a los cargos (`charges`).")
-    
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-
-    # Gráfico 1: Dispersión
-    sns.scatterplot(data=df_model, x='age', y='charges', hue='smoker', size="bmi", alpha=.65, ax=axes[0,1])
-    axes[0,1].set_title("Edad, cargos, fumador y BMI")
-
-    # Gráfico 2: Histograma
-    sns.histplot(data=df_model, x='charges', hue='smoker', kde=True, bins=35, ax=axes[0,0])
-    axes[0,0].set_title("Distribución de cargos por condición")
-
-    # Gráfico 3: Caja de pivote (Boxplot)
-    sns.boxplot(data=df_model, x='smoker', y='charges', hue='sex', ax=axes[1,0])
-    axes[1,0].set_title("Cargos por fumador y sexo")
-
-    # Gráfico 4: Hojas/Violín
-    sns.violinplot(data=df_model, x='region', y='charges', hue='smoker', ax=axes[1,1])
-    axes[1,1].set_title("Cargos por región y fumador")
-
-    plt.tight_layout()
-    st.pyplot(fig)
-
-    st.markdown("---")
-
-    # 4. Predicción / Modelos (Estructura de ejecución)
-    st.header("4. Simulación de Predicción de Riesgo")
-    st.write("Ingresa los datos del cliente para evaluar su segmento de riesgo.")
-    
-    # Formulario de entrada de usuario
-    with st.form("prediction_form"):
-        c1, c2, c3 = st.columns(3)
-        age = c1.number_input("Edad", min_value=18, max_value=100, value=30)
-        sex = c2.selectbox("Sexo", options=["female", "male"])
-        bmi = c3.number_input("Índice de Masa Corporal (BMI)", min_value=10.0, max_value=60.0, value=25.0)
-        
-        c4, c5, c6 = st.columns(3)
-        children = c4.number_input("Hijos", min_value=0, max_value=5, value=0)
-        smoker = c5.selectbox("¿Fuma?", options=["yes", "no"])
-        region = c6.selectbox("Región", options=["southwest", "southeast", "northwest", "northeast"])
-        
-        submit = st.form_submit_button("Calcular Riesgo Actuarial")
-    
-    if submit:
-        # Crear DataFrame con la entrada del usuario
-        input_data = pd.DataFrame([{
-            'age': age, 'sex': sex, 'bmi': bmi, 
-            'children': children, 'smoker': smoker, 'region': region
-        }])
-        
-        st.write("Datos ingresados para el modelo:")
-        st.dataframe(input_data)
-        
-        # Rutas de los modelos indicados en tu notebook
-        kmeans_path = 'models/kmeasn_riesgo_actuarial.pk1'
-        svm_path = 'models/svm_riesgo_actuarial.pk1'
-        
-        # Validación de la existencia de los archivos de modelo
-        if os.path.exists(kmeans_path) and os.path.exists(svm_path):
-            try:
-                kmeans_model = joblib.load(kmeans_path)
-                svm_model = joblib.load(svm_path)
-                st.success("¡Modelos cargados correctamente!")
-            except Exception as e:
-                st.error(f"Error al procesar los modelos: {e}")
-        else:
-            st.info("💡 **Nota:** Para generar las predicciones en vivo, asegúrate de haber ejecutado el entrenamiento en tu notebook y guardado los archivos correspondientes en la carpeta `./models/`.")
+            St.success("¡Modelos `.pkl` cargados con éxito de manera local!")
+            
+            # NOTA: Descomenta e integra según cómo proceses tus variables categóricas (OneHot/LabelEncoder) en tu pipeline:
+            # cluster_pred = kmeans_model.predict(input_data)
+            # riesgo_pred = svm_model.predict(input_data)
+            # st.metric(label="Clúster Asignado", value=f"Cluster {cluster_pred[0]}")
+            
+        Except Exception as e:
+            St.error(f"Error al ejecutar la inferencia con los archivos .pkl: {e}")
+    Else:
+        St.error("Asegúrate de que 'kmeans_riesgo_actuarial.pkl' y 'svm_riesgo_actuarial.pkl' estén en el mismo directorio que app.py.")
