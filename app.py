@@ -10,7 +10,7 @@ import os
 st.set_page_config(page_title="Riesgo Actuarial - IS-701", layout="wide")
 sns.set_theme(style='whitegrid', context='notebook')
 
-st.title("📊 Riesgo Actuarial con K-means y SVM")
+st.title("Riesgo Actuarial con K-means y SVM")
 st.markdown("### Asignatura: IS-701-Inteligencia Artificial - Campus Comayagua")
 st.write("Visualización y predicción interactiva utilizando los modelos y datos preprocesados.")
 
@@ -118,7 +118,7 @@ if submit:
             cluster = modelo.predict(cliente)[0]
             
             # Mostrar resultado estilizado
-            st.success("🎉 ¡Predicción completada exitosamente!")
+            st.success("¡Predicción completada exitosamente!")
             
             metric_c1, metric_c2 = st.columns(2)
             metric_c1.metric(label="Clúster Predicho (K-means)", value=f"Cluster {cluster}")
@@ -133,6 +133,6 @@ if submit:
                 
         except Exception as e:
             st.error(f"Error al ejecutar la predicción con el modelo: {e}")
-            st.info("💡 Consejo: Si salta un error de tipos, asegúrate de que el modelo guardado contenga un Pipeline con encoders para las columnas categóricas ('sex', 'smoker', 'region').")
+            st.info("Consejo: Si salta un error de tipos, asegúrate de que el modelo guardado contenga un Pipeline con encoders para las columnas categóricas ('sex', 'smoker', 'region').")
     else:
         st.error(f"No se encontró el archivo '{kmeans_path}' en el directorio. Por favor ponlo junto al app.py.")
